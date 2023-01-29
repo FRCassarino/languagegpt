@@ -7,14 +7,16 @@ class GPT3API:
 
     def generate_response(self, prompt):
         response = openai.Completion.create(
-            engine="text-davinci-003",
+            engine="code-davinci-002",
             prompt=prompt,
-            temperature=0.7,
+            temperature=0,
             max_tokens=256,
             top_p=1,
             frequency_penalty=0,
             presence_penalty=0,
-            best_of=1
+            best_of=1,
+            stop="USER:",
+            
         )
 
         return response.choices[0].text
