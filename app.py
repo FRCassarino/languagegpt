@@ -35,6 +35,7 @@ def chat():
     else:
         return jsonify({"error": "Invalid language"}), 400
     if not conversations:
+        conversations.clear()
         prompt_with_message = prompt + message + "\nCHATBOT: "
         response = gpt3.generate_response(prompt_with_message)
         conversations.append("USER: " + message + "\nCHATBOT: " + response)
@@ -44,6 +45,11 @@ def chat():
         conversations.append("USER: " + message + "\nCHATBOT: " + response)
 
     return jsonify({"response": response})
+
+@app.route("/reset", methods=["GET"])
+def reset():
+    conversations.clear()
+    return jsonify({"message": "Conversations cleared."})
 
 if __name__ == "__main__":
     app.run(port=8000, debug=True)

@@ -1,7 +1,11 @@
-import React, { useState } from 'react'
-import { TextInput, Text, Button, View, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native'
+import React, { useState, useEffect, useRef } from 'react'
+import { TextInput, Text, View, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native'
 import axios from 'axios'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
+
+import Loader from 'react-native-three-dots';
+
+
 
 const styles = StyleSheet.create({
   container: {
@@ -10,8 +14,8 @@ const styles = StyleSheet.create({
   },
   chatContainer: {
     flex: 1,
-    padding: 10,
     marginTop: 10,
+    
   },
   chatBubble: {
     padding: 10,
@@ -74,13 +78,24 @@ const ChatScreen = ({ navigation, route }) => {
   const [conversation, setConversation] = useState([])
   const [loading, setLoading] = useState(false)
   const [showTranslation, setShowTranslation] = useState(null)
+  const scrollViewRef = useRef(null)
+  
 
+
+  useEffect(() => {
+    setConversation([]);
+    setInput('');
+    axios.get('http://127.0.0.1:8000/reset')
+  }, [])
 
   async function handleSubmit() {
     try {
       setLoading(true)
       setConversation(conversation => [...conversation, { user: input }])
       setInput('')
+      setTimeout(() => {
+        scrollViewRef.current.scrollToEnd({ animated: true });
+      }, 100);
 
       const res = await axios.post(
         'http://127.0.0.1:8000/chat',
@@ -94,14 +109,19 @@ const ChatScreen = ({ navigation, route }) => {
       const responseTranslation = responseString.split(' (')[1].split(')\n')[0]
       const responseNote = responseString.split('Note: ')[1]
       
+      
       setConversation(conversation => [...conversation, { 
         chatbot: {
           message: responseMessage,
           translation: responseTranslation,
           note: responseNote
         }
+      
       }])
       setLoading(false)
+      setTimeout(() => {
+        scrollViewRef.current.scrollToEnd({ animated: true });
+      }, 100)
     } catch (error) {
       console.error(error)
       setLoading(false)
@@ -115,7 +135,8 @@ const ChatScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.chatContainer}>
+      <ScrollView style={styles.chatContainer} ref={scrollViewRef}>
+        <View style={{padding: 10}}>
         {conversation.map((item, index) => (
           <View key={index}>
             {item.chatbot && item.chatbot.note !== 'No errors.' && (
@@ -130,9 +151,15 @@ const ChatScreen = ({ navigation, route }) => {
                   <Text style={{ fontSize: 12, fontStyle: 'italic',  color: 'gray' }}>{'(' + item.chatbot.translation + ')'}</Text>
                 )}
               </View>
+             
             </TouchableOpacity>
           </View>
+          
         ))}
+         {loading && <View  style={[styles.chatBubble, styles.chatbotChatBubble]}>
+                <Loader color={'gray'} size={2} />
+              </View>}
+        </View>
       </ScrollView>
       <View style={styles.inputContainer}>
         {loading && (
@@ -143,6 +170,7 @@ const ChatScreen = ({ navigation, route }) => {
           onChangeText={text => setInput(text)}
           value={input}
           autoCorrect={false}
+          editable={!loading}
         />
         <TouchableOpacity onPress={handleSubmit} style={{ marginLeft: 10 }}>
           <MaterialCommunityIcons name="send" size={26} color="#228B22" />
