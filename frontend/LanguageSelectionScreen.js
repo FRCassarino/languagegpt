@@ -7,23 +7,25 @@ import {
   Image,
   Animated,
 } from "react-native";
+import { Asset } from 'expo-asset';
+
 
 const flags = {
-  spanish: require("./assets/spanish.png"),
-  italian: require("./assets/italian.png"),
-  french: require("./assets/french.png"),
-  german: require("./assets/german.png"),
-  portuguese: require("./assets/portuguese.png"),
-  dutch: require("./assets/dutch.png"),
-  swedish: require("./assets/swedish.png"),
-  turkish: require("./assets/turkish.png"),
-  russian: require("./assets/russian.png"),
-  danish: require("./assets/danish.png"),
-  norwegian: require("./assets/norwegian.png"),
-  polish: require("./assets/polish.png"),
-  arabic: require("./assets/arabic.png"),
-  greek: require("./assets/greek.png"),
-  czech: require("./assets/czech.png"),
+  spanish: require("./assets/flags/spanish.png"),
+  italian: require("./assets/flags/italian.png"),
+  french: require("./assets/flags/french.png"),
+  german: require("./assets/flags/german.png"),
+  portuguese: require("./assets/flags/portuguese.png"),
+  dutch: require("./assets/flags/dutch.png"),
+  swedish: require("./assets/flags/swedish.png"),
+  turkish: require("./assets/flags/turkish.png"),
+  russian: require("./assets/flags/russian.png"),
+  danish: require("./assets/flags/danish.png"),
+  norwegian: require("./assets/flags/norwegian.png"),
+  polish: require("./assets/flags/polish.png"),
+  arabic: require("./assets/flags/arabic.png"),
+  greek: require("./assets/flags/greek.png"),
+  czech: require("./assets/flags/czech.png"),
 };
 
 const languages = [
@@ -47,6 +49,13 @@ const languages = [
 const LanguageSelectionScreen = ({ navigation }) => {
   const [selectedLanguageIndex, setSelectedLanguageIndex] = useState(0);
   const animation = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    (async () => {
+      await Asset.loadAsync(languages.map((language) => flags[language.code]));
+    })();
+    return () => {};
+  }, []);
 
   const handleLeftArrowPress = () => {
     Animated.timing(animation, {
@@ -79,6 +88,7 @@ const LanguageSelectionScreen = ({ navigation }) => {
           ? 0
           : selectedLanguageIndex + 1
       );
+
       animation.setValue(-1);
       Animated.timing(animation, {
         toValue: 0,
@@ -93,7 +103,7 @@ const LanguageSelectionScreen = ({ navigation }) => {
       <Text style={styles.header}>Select a Language</Text>
       <View style={styles.languageContainer}>
         <TouchableOpacity onPress={handleLeftArrowPress}>
-          <Text style={[styles.arrow, styles.leftArrow]}>{"<"}</Text>
+          <Text style={styles.arrow}>{"<"}</Text>
         </TouchableOpacity>
         <Animated.View
           style={[
@@ -103,23 +113,25 @@ const LanguageSelectionScreen = ({ navigation }) => {
                 {
                   translateX: animation.interpolate({
                     inputRange: [-1, 0, 1],
-                    outputRange: [-200, 0, 200],
+                    outputRange: [-500, 0, 500],
                   }),
                 },
               ],
             },
           ]}
-        >
-          <Image
-            source={flags[languages[selectedLanguageIndex].code]}
-            style={[styles.flag, styles.largeFlag]}
-          />
-          <Text style={[styles.language, styles.centeredText]}>
-            {languages[selectedLanguageIndex].name}
-          </Text>
+        > 
+          <View >
+            <Image
+              source={flags[languages[selectedLanguageIndex].code]}
+              style={[styles.flag]}
+            />
+            <Text style={[styles.language]}>
+              {languages[selectedLanguageIndex].name}
+            </Text>
+          </View>
         </Animated.View>
         <TouchableOpacity onPress={handleRightArrowPress}>
-          <Text style={[styles.arrow, styles.rightArrow]}>{">"}</Text>
+          <Text style={styles.arrow}>{">"}</Text>
         </TouchableOpacity>
       </View>
       <TouchableOpacity
@@ -153,7 +165,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   arrow: {
-    fontSize: 30,
+    fontSize: 50,
+    marginBottom: 25,
   },
   flagContainer: {
     alignItems: "center",
@@ -162,12 +175,12 @@ const styles = StyleSheet.create({
   },
   flag: {
     width: 200,
-    height: 200,
-    resizeMode: "contain",
+    height: 150,
+    resizeMode: "aspect-fit",
   },
   language: {
+    padding: 10,
     fontSize: 20,
-    marginTop: 20,
     textAlign: "center",
   },
   selectButton: {
@@ -188,12 +201,6 @@ const styles = StyleSheet.create({
   modernText: {
     color: "#fff",
     fontSize: 25,
-  },
-  leftArrow: {
-    transform: [{ rotate: "0deg" }],
-  },
-  rightArrow: {
-    transform: [{ rotate: "0deg" }],
   },
 });
 
