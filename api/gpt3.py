@@ -6,8 +6,10 @@ class GPT3API:
         openai.api_key = token
 
     def generate_response(self, prompt):
+        # log the prompt
+        print(f"Prompt: {prompt}")
         response = openai.Completion.create(
-            engine="code-davinci-002",
+            engine="text-davinci-003",
             prompt=prompt,
             temperature=0,
             max_tokens=256,
