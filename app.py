@@ -3,7 +3,8 @@ import os
 from api.prompts import *
 from flask import Flask, request, jsonify
 from api.gpt3 import GPT3API
-
+import random
+import re
 app = Flask(__name__)
 
 try:
@@ -15,6 +16,9 @@ except IOError:
 config = {
     "gpt3_token": os.environ.get('GPT3_TOKEN') or local_config['gpt3_token'],
 }
+
+with open("icebreakers.txt", "r") as file:
+    ICEBREAKERS = file.read()
 
 gpt3 = GPT3API(config["gpt3_token"]) 
 
@@ -42,6 +46,17 @@ def home():
 
 conversations = []
 
+def get_random_icebreaker(language):
+    language = language.lower()
+    with open("icebreakers.txt", "r") as f:
+        text = f.read()
+        language_group = re.search(f"{language.upper()}.*?(?=\n[A-Z]+:)", text, re.DOTALL)
+        if language_group:
+            icebreakers = re.findall("-.*?(?=\n)", language_group.group())
+            return random.choice(icebreakers).strip().lstrip("- ")
+        else:
+            return f"Sorry, no icebreakers found for {language}."
+
 @app.route("/chat", methods=["POST"])
 def chat():
     selected_language = request.json.get("language")
@@ -56,16 +71,23 @@ def chat():
         response = gpt3.generate_response(prompt_with_message)
         conversations.append("USER: " + message + "\nCHATBOT: " + response)
     else:
-        prompt_with_conversation = prompt + "\n".join(conversations) + "USER: " + message + "\nCHATBOT: "
+        prompt_with_conversation = prompt + "\n".join(conversations) + "\nUSER: " + message + "\nCHATBOT: "
         response = gpt3.generate_response(prompt_with_conversation)
         conversations.append("USER: " + message + "\nCHATBOT: " + response)
 
     return jsonify({"response": response})
 
-@app.route("/reset", methods=["GET"])
+@app.route("/reset", methods=["POST"])
 def reset():
     conversations.clear()
-    return jsonify({"message": "Conversations cleared."})
+    selected_language = request.json.get("language")
+    icebreaker = get_random_icebreaker(selected_language)
+    prompt = LANGUAGE_PROMPTS.get(selected_language)
+    if not prompt:
+        return jsonify({"error": "Invalid language"}), 400
+    conversations.append("\nCHATBOT: " + icebreaker)
+    return jsonify({"response": icebreaker})
 
 if __name__ == "__main__":
     app.run(port=8000, debug=True)
+    
