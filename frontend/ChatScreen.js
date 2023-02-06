@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { TextInput, Text, View, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native'
+import { TextInput, Text, View, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity, KeyboardAvoidingView } from 'react-native'
 import axios from 'axios'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 
@@ -45,7 +45,8 @@ const styles = StyleSheet.create({
     height: 60,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10
+    padding: 10,
+    marginBottom: 30,
   },
   textInput: {
     height: 40,
@@ -89,6 +90,9 @@ const ChatScreen = ({ navigation, route }) => {
   }, [])
 
   async function handleSubmit() {
+    if (!input || loading) {
+      return;
+    }
     try {
       setLoading(true)
       setConversation(conversation => [...conversation, { user: input }])
@@ -134,7 +138,8 @@ const ChatScreen = ({ navigation, route }) => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={{ height: '100%' }}>
+    <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={60} style={styles.container}>
       <ScrollView style={styles.chatContainer} ref={scrollViewRef}>
         <View style={{padding: 10}}>
         {conversation.map((item, index) => (
@@ -161,7 +166,7 @@ const ChatScreen = ({ navigation, route }) => {
               </View>}
         </View>
       </ScrollView>
-      <View style={styles.inputContainer}>
+      <View  style={styles.inputContainer}>
         {loading && (
           <ActivityIndicator size="small" color="#228B22" style={{ marginRight: 10 }} />
         )}
@@ -172,11 +177,12 @@ const ChatScreen = ({ navigation, route }) => {
           autoCorrect={false}
           editable={!loading}
         />
-        <TouchableOpacity onPress={handleSubmit} style={{ marginLeft: 10 }}>
+        <TouchableOpacity onPress={handleSubmit} style={{ marginLeft: 10 }} disabled={loading || !input}>
           <MaterialCommunityIcons name="send" size={26} color="#228B22" />
         </TouchableOpacity>
 
       </View>
+    </KeyboardAvoidingView>
     </View>
   )
 }
