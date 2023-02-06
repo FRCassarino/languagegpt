@@ -90,7 +90,7 @@ const ChatScreen = ({ navigation, route }) => {
   useEffect(() => {
     setInput("");
     const res =  axios.post(
-      "http://127.0.0.1:8000/reset",
+      "http://languagegptbackend-dev.us-west-2.elasticbeanstalk.com/reset",
       {
         
           language: language,
@@ -128,7 +128,7 @@ const ChatScreen = ({ navigation, route }) => {
       }, 100);
 
       const res = await axios.post(
-        "http://127.0.0.1:8000/chat",
+        "http://languagegptbackend-dev.us-west-2.elasticbeanstalk.com/chat",
         {
           message: input,
           language: language,
