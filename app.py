@@ -1,6 +1,6 @@
 import json
 import os
-from api.prompts import SPANISH_PROMPT, ITALIAN_PROMPT
+from api.prompts import *
 from flask import Flask, request, jsonify
 from api.gpt3 import GPT3API
 
@@ -18,6 +18,24 @@ config = {
 
 gpt3 = GPT3API(config["gpt3_token"]) 
 
+LANGUAGE_PROMPTS = {
+    "spanish": SPANISH_PROMPT,
+    "italian": ITALIAN_PROMPT,
+    "french": FRENCH_PROMPT,
+    "german": GERMAN_PROMPT,
+    "portuguese": PORTUGUESE_PROMPT,
+    "dutch": DUTCH_PROMPT,
+    "swedish": SWEDISH_PROMPT,
+    "turkish": TURKISH_PROMPT,
+    "russian": RUSSIAN_PROMPT,
+    "danish": DANISH_PROMPT,
+    "norwegian": NORWEGIAN_PROMPT,
+    "polish": POLISH_PROMPT,
+    "arabic": ARABIC_PROMPT,
+    "greek": GREEK_PROMPT,
+    "czech": CZECH_PROMPT,
+}
+
 @app.route("/")
 def home():
     return "Welcome to LanguageGPT."
@@ -28,11 +46,9 @@ conversations = []
 def chat():
     selected_language = request.json.get("language")
     message = request.json.get("message")
-    if selected_language == "spanish":
-        prompt = SPANISH_PROMPT
-    elif selected_language == "italian":
-        prompt = ITALIAN_PROMPT
-    else:
+    prompt = LANGUAGE_PROMPTS.get(selected_language)
+
+    if not prompt:
         return jsonify({"error": "Invalid language"}), 400
     if not conversations:
         conversations.clear()
