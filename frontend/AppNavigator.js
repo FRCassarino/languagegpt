@@ -6,6 +6,7 @@ import ChatScreen from './ChatScreen';
 const Stack = createStackNavigator();
 
 const AppNavigator = () => (
+
   <Stack.Navigator initialRouteName="LanguageSelection">
     <Stack.Screen
       name="LanguageSelection"
@@ -15,9 +16,11 @@ const AppNavigator = () => (
     <Stack.Screen
       name="Chat"
       component={ChatScreen}
-      options={({ route }) => ({ title: route.params.language })}
+      options={({ route }) => ({ title: route.params.language.charAt(0).toUpperCase() + route.params.language.slice(1) })}
     />
   </Stack.Navigator>
 );
 
 export default AppNavigator;
+
+
