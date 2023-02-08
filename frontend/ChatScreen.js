@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  TextInput,
   Text,
   View,
   ScrollView,
   StyleSheet,
-  ActivityIndicator,
   TouchableOpacity,
   TouchableHighlight,
   Modal,
@@ -14,6 +12,8 @@ import {
 } from "react-native";
 import axios from "axios";
 import { BlurView } from "expo-blur";
+import ChatInput from "./ChatInput";
+import ChatList from "./ChatList";
 
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -33,53 +33,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     maxWidth: "70%",
   },
-  userChatBubble: {
-    backgroundColor: "#F0FFFF",
-    alignSelf: "flex-end",
-  },
   popupChatBubble: {
     backgroundColor: "#F0FFFF",
-  },
-  editButton: {
-    alignSelf: "flex-end",
   },
   chatbotChatBubble: {
     backgroundColor: "#F5F5DC",
     alignSelf: "flex-start",
-  },
-  message: {
-    fontSize: 16,
-  },
-  translation: {
-    fontSize: 14,
-    fontStyle: "italic",
-  },
-  note: {
-    fontSize: 12,
-    fontWeight: "bold",
-  },
-  inputContainer: {
-    height: 60,
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 10,
-    marginBottom: 30,
-  },
-  textInput: {
-    height: 40,
-    borderColor: "gray",
-    borderWidth: 1,
-    flex: 1,
-    padding: 10,
-    borderRadius: 10,
-  },
-  submitButton: {
-    backgroundColor: "#228B22",
-    padding: 10,
-    borderRadius: 10,
-  },
-  submitButtonText: {
-    color: "#FFFFFF",
   },
   noteContainer: {
     flexDirection: "row",
@@ -239,116 +198,62 @@ const ChatScreen = ({ navigation, route }) => {
                 with an icebreaker!
               </Text>
             </View>
-            {conversation.map((item, index) => (
-              <View key={index}>
-                {item.chatbot && item.chatbot.note !== "No errors." && (
-                  <View style={styles.noteContainer}>
-                    <Text style={{ fontSize: 12, color: "gray" }}>
-                      {" "}
-                      {item.chatbot.note}
-                    </Text>
-                  </View>
-                )}
-                <TouchableOpacity
-                  onLongPress={() => {
-                    //only trigger if the message is from the user and its their last message
-                    if (item.user && index >= conversation.length - 2) {
-                      setModalVisible(true);
-                      setModalMessage(item.user);
-                      setModalIndex(index);
-                    }
-                  }}
-                  onPress={() => toggleTranslation(index)}
-                >
-                  <View
-                    style={[
-                      styles.chatBubble,
-                      item.user
-                        ? styles.userChatBubble
-                        : styles.chatbotChatBubble,
-                    ]}
-                  >
-                    <Text style={{ fontSize: 16 }}>
-                      {item.chatbot ? item.chatbot.message : item.user}
-                    </Text>
-                    {item.chatbot && showTranslation === index && (
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          fontStyle: "italic",
-                          color: "gray",
-                        }}
-                      >
-                        {"(" + item.chatbot.translation + ")"}
-                      </Text>
-                    )}
-                  </View>
-                </TouchableOpacity>
-
-                <Modal
-                  animationType="fade"
-                  transparent={true}
-                  visible={modalVisible}
-                  onRequestClose={() => {
-                    setModalVisible(false);
-                  }}
-                >
-                  <View style={[styles.centeredView]}>
-                    <TouchableWithoutFeedback
-                      onPress={() => setModalVisible(false)}
-                    >
-                      <BlurView style={styles.modalOverlay} intensity={20} />
-                    </TouchableWithoutFeedback>
-                    <View style={[styles.chatBubble, styles.popupChatBubble]}>
-                      <Text style={{ fontSize: 16 }}>{modalMessage}</Text>
-                    </View>
-                    <View style={styles.modalView}>
-                      <TouchableHighlight
-                        style={{
-                          paddingHorizontal: 10,
-                        }}
-                        onPress={() => {
-                          setModalVisible(!modalVisible);
-                          editMessage(modalIndex);
-                        }}
-                      >
-                        <Text style={styles.modalText}>Edit</Text>
-                      </TouchableHighlight>
-                    </View>
-                  </View>
-                </Modal>
-              </View>
-            ))}
+            <ChatList
+              conversation={conversation}
+              toggleTranslation={toggleTranslation}
+              showTranslation={showTranslation}
+              modalVisible={modalVisible}
+              setModalVisible={setModalVisible}
+              modalMessage={modalMessage}
+              setModalMessage={setModalMessage}
+              modalIndex={modalIndex}
+              setModalIndex={setModalIndex}
+              editMessage={editMessage}
+              loading={loading}
+            />
             {loading && (
               <View style={[styles.chatBubble, styles.chatbotChatBubble]}>
                 <Loader color={"gray"} size={2} />
               </View>
             )}
           </View>
-        </ScrollView>
-        <View style={styles.inputContainer}>
-          {loading && (
-            <ActivityIndicator
-              size="small"
-              color="#228B22"
-              style={{ marginRight: 10 }}
-            />
-          )}
-          <TextInput
-            style={styles.textInput}
-            onChangeText={(text) => setInput(text)}
-            value={input}
-            autoCorrect={false}
-            editable={!loading}
-          />
-          <TouchableOpacity
-            onPress={handleSubmit}
-            style={{ marginLeft: 10 }}
-            disabled={loading || !input}
+          <Modal
+            animationType="fade"
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={() => {
+              setModalVisible(false);
+            }}
           >
-            <MaterialCommunityIcons name="send" size={26} color="#228B22" />
-          </TouchableOpacity>
-        </View>
+            <View style={[styles.centeredView]}>
+              <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+                <BlurView style={styles.modalOverlay} intensity={20} />
+              </TouchableWithoutFeedback>
+              <View style={[styles.chatBubble, styles.popupChatBubble]}>
+                <Text style={{ fontSize: 16 }}>{modalMessage}</Text>
+              </View>
+              <View style={styles.modalView}>
+                <TouchableHighlight
+                  style={{
+                    paddingHorizontal: 10,
+                  }}
+                  onPress={() => {
+                    setModalVisible(!modalVisible);
+                    editMessage(modalIndex);
+                  }}
+                >
+                  <Text style={styles.modalText}>Edit</Text>
+                </TouchableHighlight>
+              </View>
+            </View>
+          </Modal>
+        </ScrollView>
+        <ChatInput
+          loading={loading}
+          input={input}
+          handleSubmit={handleSubmit}
+          setInput={setInput}
+        />
       </KeyboardAvoidingView>
     </View>
   );
