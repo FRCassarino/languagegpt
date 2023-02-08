@@ -88,6 +88,21 @@ def reset():
     conversations.append("\nCHATBOT: " + icebreaker)
     return jsonify({"response": icebreaker})
 
+# deletes the last message from the user and the chatbot's response
+@app.route("/deletelast", methods=["POST"])
+def editLastMessage():
+    selected_language = request.json.get("language")
+    prompt = LANGUAGE_PROMPTS.get(selected_language)
+
+    if not prompt:
+        return jsonify({"error": "Invalid language"}), 400
+    if not conversations:
+        return jsonify({"error": "Nothing to delete"}), 400
+    else:
+        conversations.pop()
+
+    return jsonify({"response": "Last message deleted"})
+
 if __name__ == "__main__":
     app.run(port=8000, debug=True)
     
