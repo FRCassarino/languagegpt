@@ -113,7 +113,7 @@ const LanguageSelectionScreen = ({ navigation }) => {
                 {
                   translateX: animation.interpolate({
                     inputRange: [-1, 0, 1],
-                    outputRange: [-500, 0, 500],
+                    outputRange: [500, 0, -500],
                   }),
                 },
               ],
@@ -177,6 +177,9 @@ const styles = StyleSheet.create({
     width: 200,
     height: 150,
     resizeMode: "aspect-fit",
+    borderWidth: 1,
+    borderColor: "black",
+
   },
   language: {
     padding: 10,
