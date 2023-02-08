@@ -7,9 +7,14 @@ import {
   StyleSheet,
   ActivityIndicator,
   TouchableOpacity,
+  TouchableHighlight,
+  Modal,
   KeyboardAvoidingView,
+  TouchableWithoutFeedback,
 } from "react-native";
 import axios from "axios";
+import { BlurView } from "expo-blur";
+
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import Loader from "react-native-three-dots";
@@ -30,6 +35,12 @@ const styles = StyleSheet.create({
   },
   userChatBubble: {
     backgroundColor: "#F0FFFF",
+    alignSelf: "flex-end",
+  },
+  popupChatBubble: {
+    backgroundColor: "#F0FFFF",
+  },
+  editButton: {
     alignSelf: "flex-end",
   },
   chatbotChatBubble: {
@@ -77,6 +88,38 @@ const styles = StyleSheet.create({
     marginTop: 0,
     marginBottom: 10,
   },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalView: {
+    margin: 5,
+    backgroundColor: "white",
+    borderRadius: 10,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalText: {
+    color: "black",
+    textAlign: "center",
+    paddingVertical: 5,
+  },
+  modalOverlay: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
 });
 
 const ChatScreen = ({ navigation, route }) => {
@@ -85,34 +128,32 @@ const ChatScreen = ({ navigation, route }) => {
   const [conversation, setConversation] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showTranslation, setShowTranslation] = useState(null);
+  const [modalIndex, setModalIndex] = useState(null);
   const scrollViewRef = useRef(null);
+  const [modalVisible, setModalVisible] = useState(null);
+  const [modalMessage, setModalMessage] = useState("");
 
   useEffect(() => {
     setInput("");
-    const res =  axios.post(
-      "http://languagegptbackend-dev.us-west-2.elasticbeanstalk.com/reset",
-      {
-        
-          language: language,
-        
-      }
-    ).then((res) => {
-    
-    console.log(res.data)
-    const icebreaker = res.data.response.trim();
-    const icebreakerMessage = icebreaker.split(" (")[0];
-    const icebreakerTranslation = icebreaker.split(" (")[1].split(")\n")[0];
-    setConversation((conversation) => [
-      {
-        chatbot: {
-          message: icebreakerMessage,
-          translation: icebreakerTranslation,
-          note: "No errors.",
-        },
-      }
-    ]);
-  });
-
+    const res = axios
+      .post("http://127.0.0.1:8000/reset", {
+        language: language,
+      })
+      .then((res) => {
+        console.log(res.data);
+        const icebreaker = res.data.response.trim();
+        const icebreakerMessage = icebreaker.split(" (")[0];
+        const icebreakerTranslation = icebreaker.split(" (")[1].split(")\n")[0];
+        setConversation((conversation) => [
+          {
+            chatbot: {
+              message: icebreakerMessage,
+              translation: icebreakerTranslation,
+              note: "No errors.",
+            },
+          },
+        ]);
+      });
   }, []);
 
   async function handleSubmit() {
@@ -121,19 +162,19 @@ const ChatScreen = ({ navigation, route }) => {
     }
     try {
       setLoading(true);
-      setConversation((conversation) => [...conversation, { user: input }]);
       setInput("");
+
+      setConversation((conversation) => [...conversation, { user: input }]);
+
       setTimeout(() => {
         scrollViewRef.current.scrollToEnd({ animated: true });
       }, 100);
 
-      const res = await axios.post(
-        "http://languagegptbackend-dev.us-west-2.elasticbeanstalk.com/chat",
-        {
-          message: input,
-          language: language,
-        }
-      );
+      const res = await axios.post("http://127.0.0.1:8000/chat", {
+        message: input,
+        language: language,
+      });
+
       const responseString = res.data.response.trim();
       const responseMessage = responseString.split(" (")[0];
       const responseTranslation = responseString.split(" (")[1].split(")\n")[0];
@@ -159,6 +200,20 @@ const ChatScreen = ({ navigation, route }) => {
     }
   }
 
+  async function editMessage(index) {
+    const message = conversation[index].user;
+
+    let updatedConversation = [...conversation];
+    updatedConversation = updatedConversation.slice(0, modalIndex);
+    setConversation(updatedConversation);
+
+    res = await axios.post("http://127.0.0.1:8000/deletelast", {
+      language: language,
+    });
+    setInput(message);
+    setModalIndex(null);
+  }
+
   function toggleTranslation(index) {
     setShowTranslation(showTranslation === index ? null : index);
   }
@@ -170,11 +225,18 @@ const ChatScreen = ({ navigation, route }) => {
         keyboardVerticalOffset={60}
         style={styles.container}
       >
-        <ScrollView style={styles.chatContainer} ref={scrollViewRef} bounces={true}>
+        <ScrollView
+          style={styles.chatContainer}
+          ref={scrollViewRef}
+          bounces={true}
+        >
           <View style={{ padding: 10 }}>
             <View style={styles.noteContainer}>
               <Text style={{ fontSize: 12, color: "gray" }}>
-                Chat with the bot to practice your {language.charAt(0).toUpperCase() + language.slice(1)}. The bot will point out and explain any mistakes you make. Let's start with an icebreaker!
+                Chat with the bot to practice your{" "}
+                {language.charAt(0).toUpperCase() + language.slice(1)}. The bot
+                will point out and explain any mistakes you make. Let's start
+                with an icebreaker!
               </Text>
             </View>
             {conversation.map((item, index) => (
@@ -187,7 +249,17 @@ const ChatScreen = ({ navigation, route }) => {
                     </Text>
                   </View>
                 )}
-                <TouchableOpacity onPress={() => toggleTranslation(index)}>
+                <TouchableOpacity
+                  onLongPress={() => {
+                    //only trigger if the message is from the user and its their last message
+                    if (item.user && index >= conversation.length - 2) {
+                      setModalVisible(true);
+                      setModalMessage(item.user);
+                      setModalIndex(index);
+                    }
+                  }}
+                  onPress={() => toggleTranslation(index)}
+                >
                   <View
                     style={[
                       styles.chatBubble,
@@ -212,6 +284,39 @@ const ChatScreen = ({ navigation, route }) => {
                     )}
                   </View>
                 </TouchableOpacity>
+
+                <Modal
+                  animationType="fade"
+                  transparent={true}
+                  visible={modalVisible}
+                  onRequestClose={() => {
+                    setModalVisible(false);
+                  }}
+                >
+                  <View style={[styles.centeredView]}>
+                    <TouchableWithoutFeedback
+                      onPress={() => setModalVisible(false)}
+                    >
+                      <BlurView style={styles.modalOverlay} intensity={20} />
+                    </TouchableWithoutFeedback>
+                    <View style={[styles.chatBubble, styles.popupChatBubble]}>
+                      <Text style={{ fontSize: 16 }}>{modalMessage}</Text>
+                    </View>
+                    <View style={styles.modalView}>
+                      <TouchableHighlight
+                        style={{
+                          paddingHorizontal: 10,
+                        }}
+                        onPress={() => {
+                          setModalVisible(!modalVisible);
+                          editMessage(modalIndex);
+                        }}
+                      >
+                        <Text style={styles.modalText}>Edit</Text>
+                      </TouchableHighlight>
+                    </View>
+                  </View>
+                </Modal>
               </View>
             ))}
             {loading && (
