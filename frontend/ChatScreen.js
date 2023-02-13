@@ -81,6 +81,9 @@ const styles = StyleSheet.create({
   },
 });
 
+const BACKEND_URL = "http://languagegptbackend-dev.us-west-2.elasticbeanstalk.com/"
+const DEV_URL = "http://127.0.0.1:8000/"
+
 const ChatScreen = ({ navigation, route }) => {
   const { language } = route.params;
   const [input, setInput] = useState("");
@@ -95,7 +98,7 @@ const ChatScreen = ({ navigation, route }) => {
   useEffect(() => {
     setInput("");
     const res = axios
-      .post("http://127.0.0.1:8000/reset", {
+      .post(BACKEND_URL + "reset", {
         language: language,
       })
       .then((res) => {
@@ -129,7 +132,7 @@ const ChatScreen = ({ navigation, route }) => {
         scrollViewRef.current.scrollToEnd({ animated: true });
       }, 100);
 
-      const res = await axios.post("http://127.0.0.1:8000/chat", {
+      const res = await axios.post(BACKEND_URL + "chat", {
         message: input,
         language: language,
       });
@@ -166,7 +169,7 @@ const ChatScreen = ({ navigation, route }) => {
     updatedConversation = updatedConversation.slice(0, modalIndex);
     setConversation(updatedConversation);
 
-    res = await axios.post("http://127.0.0.1:8000/deletelast", {
+    res = await axios.post(BACKEND_URL + "deletelast", {
       language: language,
     });
     setInput(message);
