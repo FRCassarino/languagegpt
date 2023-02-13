@@ -116,7 +116,7 @@ const ChatScreen = ({ navigation, route }) => {
           },
         ]);
       });
-  }, []);
+  }, [language]);
 
   async function handleSubmit() {
     if (!input || loading) {
