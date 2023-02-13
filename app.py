@@ -74,6 +74,8 @@ def chat():
         prompt_with_conversation = prompt + "\n".join(conversations) + "\nUSER: " + message + "\nCHATBOT: "
         response = gpt3.generate_response(prompt_with_conversation)
         conversations.append("USER: " + message + "\nCHATBOT: " + response)
+        if len(conversations) > 15:
+            conversations.pop(0)
 
     return jsonify({"response": response})
 

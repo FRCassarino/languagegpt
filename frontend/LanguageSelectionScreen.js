@@ -7,8 +7,8 @@ import {
   Image,
   Animated,
 } from "react-native";
-import { Asset } from 'expo-asset';
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Asset } from "expo-asset";
 
 const flags = {
   spanish: require("./assets/flags/spanish.png"),
@@ -98,6 +98,14 @@ const LanguageSelectionScreen = ({ navigation }) => {
     });
   };
 
+  const handleLanguageSelection = async (language) => {
+    await AsyncStorage.setItem('language', language);
+    navigation.navigate("Chat", {
+      language: languages[selectedLanguageIndex].code,
+    });
+  }
+
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Select a Language</Text>
@@ -119,8 +127,8 @@ const LanguageSelectionScreen = ({ navigation }) => {
               ],
             },
           ]}
-        > 
-          <View >
+        >
+          <View>
             <Image
               source={flags[languages[selectedLanguageIndex].code]}
               style={[styles.flag]}
@@ -136,11 +144,9 @@ const LanguageSelectionScreen = ({ navigation }) => {
       </View>
       <TouchableOpacity
         style={[styles.selectButton, styles.modernButton]}
-        onPress={() =>
-          navigation.navigate("Chat", {
-            language: languages[selectedLanguageIndex].code,
-          })
-        }
+        onPress={() => {
+          handleLanguageSelection(languages[selectedLanguageIndex].code);
+        }}
       >
         <Text style={[styles.selectText, styles.modernText]}>Select</Text>
       </TouchableOpacity>
@@ -179,7 +185,6 @@ const styles = StyleSheet.create({
     resizeMode: "aspect-fit",
     borderWidth: 1,
     borderColor: "black",
-
   },
   language: {
     padding: 10,
