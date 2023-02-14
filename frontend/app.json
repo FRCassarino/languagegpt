@@ -3,7 +3,7 @@
     "name": "frontend",
     "slug": "frontend",
     "owner": "language-gpt",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -19,7 +19,8 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.frcassarino.languagegpt"
     },
     "android": {
       "adaptiveIcon": {
@@ -29,6 +30,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "812cfa73-6d6d-4b87-959d-c9aa6214caae"
+      }
     }
   }
 }
