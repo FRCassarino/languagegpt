@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Install Pillow using pip3
+pip3 install --user pillow
+
+# Add a border to the image using Python
+python3 - <<END
+from PIL import Image, ImageOps
+import os
+
+# Set the path to the image file
+image_path = "icon.png"
+
+# Check if the image file exists
+if not os.path.exists(image_path):
+    print(f"Error: {image_path} does not exist.")
+    exit()
+
+# Open the image using Pillow
+image = Image.open(image_path)
+
+# Convert the image to RGBA mode
+image = image.convert("RGBA")
+
+# Create a white background image of the same size
+background = Image.new("RGBA", image.size, "white")
+
+# Composite the original image on the white background
+image = Image.alpha_composite(background, image)
+
+# Add a white border around the image
+border_width = 200
+border_image = ImageOps.expand(image, border=border_width, fill='white')
+
+# Save the bordered image
+border_image.save("icon_border.png")
+
+print("Successfully added border to icon.png.")
+END

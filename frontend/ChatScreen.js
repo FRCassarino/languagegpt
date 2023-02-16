@@ -213,6 +213,7 @@ const ChatScreen = ({ navigation, route }) => {
               setModalIndex={setModalIndex}
               editMessage={editMessage}
               loading={loading}
+              language={language}
             />
             {loading && (
               <View style={[styles.chatBubble, styles.chatbotChatBubble]}>
