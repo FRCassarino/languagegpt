@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   flag: {
     width: 200,
     height: 150,
-    resizeMode: "aspect-fit",
+    resizeMode: "cover",
     borderWidth: 1,
     borderColor: "black",
   },
