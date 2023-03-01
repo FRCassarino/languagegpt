@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "frontend",
+    "name": "LangAI",
     "slug": "frontend",
     "owner": "language-gpt",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
