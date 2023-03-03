@@ -15,6 +15,7 @@ import { BlurView } from "expo-blur";
 import ChatInput from "./ChatInput";
 import ChatList from "./ChatList";
 import NetInfo from "@react-native-community/netinfo";
+import { CancelToken } from "axios";
 
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -106,7 +107,7 @@ const ChatScreen = ({ navigation, route }) => {
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
       setConnectionStatus(state.isConnected);
-      if(state.isConnected && conversation.length === 0) {
+      if (state.isConnected && conversation.length === 0) {
         resetChatbot();
       }
     });
@@ -153,10 +154,14 @@ const ChatScreen = ({ navigation, route }) => {
         scrollViewRef.current.scrollToEnd({ animated: true });
       }, 100);
 
-      const res = await axios.post(BACKEND_URL + "chat", {
-        message: input,
-        language: language,
-      });
+      const res = await axios.post(
+        BACKEND_URL + "chat",
+        {
+          message: input,
+          language: language,
+          timeout: 10000,
+        }
+      );
 
       const responseString = res.data.response.trim();
       const responseMessage = responseString.split(" (")[0];
@@ -178,8 +183,18 @@ const ChatScreen = ({ navigation, route }) => {
         scrollViewRef.current.scrollToEnd({ animated: true });
       }, 100);
     } catch (error) {
-      console.error(error);
-      setLoading(false);
+      if (axios.isCancel(error)) {
+        console.log("Request timed out");
+        res = await axios.post(BACKEND_URL + "deletelast", {
+          language: language,
+        });
+        setConversation(conversation);
+        setLoading(false);
+        setInput(input);
+      } else {
+        console.error(error);
+        setLoading(false);
+      }
     }
   }
 
@@ -286,7 +301,6 @@ const ChatScreen = ({ navigation, route }) => {
                   No internet connection, connect to continue...
                 </Text>
               </View>
-             
             </View>
           </Modal>
         </ScrollView>
