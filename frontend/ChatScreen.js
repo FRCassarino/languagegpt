@@ -106,8 +106,9 @@ const ChatScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
+      const prevConnectionStatus = connectionStatus;
       setConnectionStatus(state.isConnected);
-      if (state.isConnected && conversation.length === 0) {
+      if (state.isConnected && conversation.length === 0 && !prevConnectionStatus) {
         resetChatbot();
       }
     });
