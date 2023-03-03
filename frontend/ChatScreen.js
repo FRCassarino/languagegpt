@@ -14,6 +14,7 @@ import axios from "axios";
 import { BlurView } from "expo-blur";
 import ChatInput from "./ChatInput";
 import ChatList from "./ChatList";
+import NetInfo from "@react-native-community/netinfo";
 
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -56,6 +57,7 @@ const styles = StyleSheet.create({
     margin: 5,
     backgroundColor: "white",
     borderRadius: 10,
+
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: {
@@ -81,8 +83,9 @@ const styles = StyleSheet.create({
   },
 });
 
-const BACKEND_URL = "http://languagegptbackend-dev.us-west-2.elasticbeanstalk.com/"
-const DEV_URL = "http://127.0.0.1:8000/"
+const BACKEND_URL =
+  "http://languagegptbackend-dev.us-west-2.elasticbeanstalk.com/";
+const DEV_URL = "http://127.0.0.1:8000/";
 
 const ChatScreen = ({ navigation, route }) => {
   const { language } = route.params;
@@ -94,8 +97,26 @@ const ChatScreen = ({ navigation, route }) => {
   const scrollViewRef = useRef(null);
   const [modalVisible, setModalVisible] = useState(null);
   const [modalMessage, setModalMessage] = useState("");
+  const [connectionStatus, setConnectionStatus] = useState(true);
 
   useEffect(() => {
+    resetChatbot();
+  }, [language]);
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      setConnectionStatus(state.isConnected);
+      if(state.isConnected && conversation.length === 0) {
+        resetChatbot();
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  function resetChatbot() {
     setInput("");
     const res = axios
       .post(BACKEND_URL + "reset", {
@@ -116,7 +137,7 @@ const ChatScreen = ({ navigation, route }) => {
           },
         ]);
       });
-  }, [language]);
+  }
 
   async function handleSubmit() {
     if (!input || loading) {
@@ -249,6 +270,23 @@ const ChatScreen = ({ navigation, route }) => {
                   <Text style={styles.modalText}>Edit</Text>
                 </TouchableHighlight>
               </View>
+            </View>
+          </Modal>
+          <Modal
+            animationType="fade"
+            transparent={true}
+            visible={!connectionStatus}
+          >
+            <View style={styles.centeredView}>
+              <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+                <BlurView style={styles.modalOverlay} intensity={20} />
+              </TouchableWithoutFeedback>
+              <View style={[styles.chatBubble, styles.popupChatBubble]}>
+                <Text style={{ fontSize: 16 }}>
+                  No internet connection, connect to continue...
+                </Text>
+              </View>
+             
             </View>
           </Modal>
         </ScrollView>
